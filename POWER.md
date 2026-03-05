@@ -1,22 +1,48 @@
 ---
-name: aws-pricing-calculator
-description: >
-  Generate shareable AWS Pricing Calculator URLs from architecture descriptions,
-  blog posts, or solution documents. Discovers service schemas, looks up real
-  pricing, builds estimate JSON, and POSTs to the Save API.
-triggers:
-  - AWS cost estimate
-  - pricing calculator
-  - calculator URL
-  - cost this architecture
-  - estimate for blog
-  - AWS pricing
-  - calculate AWS costs
+name: "aws-pricing-calculator"
+displayName: "AWS Pricing Calculator"
+description: "Generate shareable AWS Pricing Calculator URLs from architecture descriptions, blog posts, or solution documents. Discovers service schemas, looks up real pricing, builds estimate JSON, and POSTs to the Save API."
+keywords: ["AWS cost estimate", "pricing calculator", "AWS calculator URL", "cost this architecture", "estimate for blog", "AWS pricing", "calculate AWS costs"]
+author: "Eleftherios Chaniotakis"
 ---
 
-# AWS Pricing Calculator Skill
+# AWS Pricing Calculator Power
 
 Generate a shareable AWS Pricing Calculator URL from any architecture description.
+
+## Prerequisites
+
+| Prerequisite | Required For | Notes |
+|---|---|---|
+| Python 3 | CLI scripts | stdlib only, no `pip install` needed |
+| curl | CLI scripts | avoids Python SSL issues with CloudFront |
+| [AWS Pricing MCP Server](https://github.com/awslabs/mcp/tree/main/src/aws-pricing-mcp-server) | Price lookups | `get_pricing` tool for real price lookups |
+
+## Setup
+
+After installing this power:
+
+1. **Verify Python and curl are available:**
+   ```bash
+   python3 --version  # Should be Python 3.x
+   curl --version     # Should show curl version
+   ```
+
+2. **Install AWS Pricing MCP Server** (if not already installed):
+   - Open Kiro's MCP configuration
+   - Add the AWS Pricing MCP server
+   - See [AWS Pricing MCP documentation](https://github.com/awslabs/mcp/tree/main/src/aws-pricing-mcp-server)
+
+3. **Test the scripts:**
+   ```bash
+   # Navigate to the power directory
+   cd <power-install-path>
+   
+   # Test discovery (lists all services)
+   python3 scripts/calc_discover.py --list
+   ```
+
+The scripts are ready to use! Agents will execute them automatically during the workflow.
 
 ## Trigger Terms
 
@@ -32,6 +58,15 @@ Generate a shareable AWS Pricing Calculator URL from any architecture descriptio
 
 Follow these 6 steps in order:
 
+### Agent Execution Notes
+
+**When executing this workflow:**
+- Run Python scripts using `python3 scripts/script_name.py` from the power directory
+- Scripts use only Python stdlib - no pip install needed
+- Scripts use `curl` subprocess to avoid SSL issues with CloudFront
+- Always check script output for errors before proceeding to next step
+- Use AWS Pricing MCP's `get_pricing` tool for price lookups (don't hardcode prices)
+
 ### Step 1: Extract Services
 
 Read the architecture document, blog post, or user description. Identify:
@@ -45,8 +80,10 @@ Read the architecture document, blog post, or user description. Identify:
 For each service, run the discovery script to get the current schema:
 
 ```bash
-python ~/.claude/skills/aws-pricing-calculator/scripts/calc_discover.py <serviceCode1> <serviceCode2> ...
+python scripts/calc_discover.py <serviceCode1> <serviceCode2> ...
 ```
+
+**Note:** Run from the power directory, or use the full path to where you installed the power.
 
 This fetches the live service definition from CloudFront and extracts all
 configurable `calculationComponents` with their IDs, types, options, and defaults.
@@ -69,8 +106,10 @@ Calculate monthly costs: `unit_price * quantity * hours_per_month` (730 hrs).
 Create a JSON spec file defining groups and services, then build:
 
 ```bash
-python ~/.claude/skills/aws-pricing-calculator/scripts/calc_build.py spec.json -o estimate.json
+python scripts/calc_build.py spec.json -o estimate.json
 ```
+
+**Note:** Run from the power directory, or use the full path to where you installed the power.
 
 Or use the Python API directly to build the estimate dict programmatically.
 
@@ -79,8 +118,10 @@ Or use the Python API directly to build the estimate dict programmatically.
 Upload the estimate to get a shareable URL:
 
 ```bash
-python ~/.claude/skills/aws-pricing-calculator/scripts/calc_save.py estimate.json
+python scripts/calc_save.py estimate.json
 ```
+
+**Note:** Run from the power directory, or use the full path to where you installed the power.
 
 ### Step 6: Return Results
 
@@ -112,9 +153,21 @@ Provide the user with:
 
 | File | Contents |
 |------|----------|
-| `references/api_endpoints.md` | CloudFront URLs, Save API request/response format |
-| `references/service_formats.md` | Proven `calculationComponents` for 9+ services |
-| `references/troubleshooting.md` | Common issues: $0 costs, read-only warnings, SSL errors |
+| `steering/api_endpoints.md` | CloudFront URLs, Save API request/response format |
+| `steering/service_formats.md` | Proven `calculationComponents` for 9+ services |
+| `steering/troubleshooting.md` | Common issues: $0 costs, read-only warnings, SSL errors |
+
+## License & Attribution
+
+**License:** [Original License]
+
+**Power Author:** [Eleftherios Chaniotakis]
+
+**Original Work:** This power is inspired by [original-skill](https://github.com/quincysting/aws-pricing-calculator) by [Ian Qin](https://github.com/quincysting).
+
+**Source Version:** Based on [version/commit reference].
+
+**Update Frequency:** This power will be updated periodically.
 
 ## Quick Start Examples
 
