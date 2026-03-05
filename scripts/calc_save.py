@@ -25,8 +25,18 @@ except ImportError:
 def save_estimate(estimate_dict):
     """POST estimate to Save API. Returns dict with savedKey and url."""
     resp = curl_post(SAVE_API, estimate_dict)
-    body = json.loads(resp["body"]) if isinstance(resp.get("body"), str) else resp
-    saved_key = body.get("savedKey", body.get("message", ""))
+    # Parse the nested body JSON string
+    if isinstance(resp.get("body"), str):
+        body = json.loads(resp["body"])
+    else:
+        body = resp
+    
+    # Extract savedKey from the response
+    saved_key = body.get("savedKey", "")
+    if not saved_key:
+        # Fallback: sometimes it's in message field
+        saved_key = body.get("message", "").split()[-1] if "message" in body else ""
+    
     url = CALCULATOR_URL.format(key=saved_key)
     return {"savedKey": saved_key, "url": url}
 
